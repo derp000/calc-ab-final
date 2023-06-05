@@ -175,6 +175,7 @@ class Intro(ThreeDScene):
         )
         sqr_sec = VGroup(quad_one, quad_two, quad_three, quad_four)
 
+        # showing radius in top view
         dot = always_redraw(
             lambda: Dot(
                 point=axes.c2p(fz(z.get_value()), 0, 0),
@@ -203,8 +204,38 @@ class Intro(ThreeDScene):
                 color=BLUE,
             ).next_to(r_val_obj, DOWN, buff=0.5)
         )
+        top_render = VGroup(dot, r_line, r_obj, r_val_obj, z_val_obj)
 
-        self.next_section("Intro", skip_animations=True)
+        # showing radius in side view
+        dot_three = always_redraw(
+            lambda: Dot3D(
+                point=axes.c2p(fz(z.get_value()), 0, z.get_value()),
+                color=RED,
+                radius=0.2,
+            )
+        )
+        trace_lines = always_redraw(
+            lambda: axes.get_lines_to_point(
+                axes.c2p(fz(z.get_value()), 0, z.get_value())
+            ),
+        )
+        r_val_obj_xz = always_redraw(
+            lambda: MathTex(f"r=x={round(fz(z.get_value()), 4)}", color=ORANGE).shift(
+                DOWN * 2.0
+            )
+        )
+        z_val_obj_xz = always_redraw(
+            lambda: MathTex(
+                f"z=f(x)={round(z.get_value(), 4)}",
+                color=BLUE,
+            ).next_to(r_val_obj_xz, DOWN, buff=0.5)
+        )
+        r_val_obj_xz.scale(0.6)
+        z_val_obj_xz.scale(0.6)
+        x_label_xz = MathTex("x").shift(RIGHT*4.0)
+        side_render = VGroup(dot_three, trace_lines, x_label_xz)
+
+        # self.next_section("Intro", skip_animations=True)
         self.set_camera_orientation(zoom=0.5)
         self.play(FadeIn(axes), FadeIn(labels))
         self.move_camera(phi=75 * DEGREES, theta=30 * DEGREES, zoom=0.75, run_time=1.5)
@@ -214,16 +245,32 @@ class Intro(ThreeDScene):
         self.wait(0.5)
         self.play(z.animate.set_value(Z_INT))
         self.wait(0.5)
+        # self.next_section("Transition 1", skip_animations=True)
         self.stop_ambient_camera_rotation()
         self.move_camera(phi=0 * DEGREES, theta=-90 * DEGREES, zoom=0.5, run_time=0.5)
         self.play(z.animate.set_value(0))
         self.wait(0.5)
-        self.next_section("Cross Section")
+        # self.next_section("Cross Section", skip_animations=True)
         self.play(Create(dot), Create(r_line), Create(r_obj))
         self.play(Create(r_val_obj), Create(z_val_obj))
         self.wait(0.5)
         self.play(z.animate.set_value(Z_INT), run_time=0.5)
-        # self.play(FadeOut(rendered, lag_ratio=0.0), run_time=0.5)
+        self.wait(0.5)
+        # self.next_section("Transition 2", skip_animations=True)
+        self.play(FadeOut(sqr_sec), FadeOut(top_render, lag_ratio=0.0), run_time=0.5)
+        self.move_camera(phi=90 * DEGREES, zoom=0.75, run_time=1.5)
+        self.wait(0.5)
+        z.set_value(0)
+        # self.next_section("Side")
+        self.add_fixed_in_frame_mobjects(r_val_obj_xz, z_val_obj_xz, x_label_xz)
+        self.play(
+            Create(trace_lines),
+            FadeIn(side_render, lag_ratio=0.0),
+            FadeIn(r_line),
+            FadeIn(r_val_obj_xz),
+            FadeIn(z_val_obj_xz),
+        )
+        self.play(z.animate.set_value(Z_INT))
 
 
 class TopView(Scene):
@@ -237,9 +284,9 @@ class TopView(Scene):
         d_line = Line(start=sqr.get_top(), end=sqr.get_bottom(), color=RED)
         d_obj = MathTex("2r", color=RED).next_to(d_line, LEFT, buff=0.2)
 
-        sqr_eqn = MathTex("A = \\frac{1}{2} r \\times 2r = 2r^{2}", color=PURPLE).next_to(
-            sqr, DOWN, buff=0.2
-        )
+        sqr_eqn = MathTex(
+            "A = \\frac{1}{2} r \\times 2r = 2r^{2}", color=PURPLE
+        ).next_to(sqr, DOWN, buff=0.2)
 
         self.play(FadeIn(sqr))
         self.play(Create(r_line), FadeIn(r_obj))
