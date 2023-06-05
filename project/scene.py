@@ -7,6 +7,25 @@ Z_INT = 1.02
 
 class SideView(Scene):
     def construct(self):
+        """
+        We didn't mention how the function was defined at first, but it is z = -1.465x^2 + 1.02. 
+        And in the YZ plane, it is z = -1.465y^2 + 1.02. We found this by finding the length of the
+        tent, which was 1.18 m. This was the hypotenuse of a 45-45-90 triangle. We decided to make the
+        corners of the tent's square base (or the legs of the triangle) our XY axes, so that meant 
+        that the intercepts were all at plus or minus 1.18/sqrt(2). 
+
+        Based on these intercepts, our equations could be found by doing 
+        f(x) = a * (x + 1.18/sqrt(2)) * (x - 1.18/sqrt(2)) and substituting the y-intercept (0, 1.02 m), 
+        which is the height. The a value of -1.465 is then substituted back into this equation. Upon rearranging, 
+        you get -1.465x^2 + 1.02.
+        
+        In other words, that means z = f(x) = f(y). Since the graph of f(x) and f(y) are basically the same, 
+        we'll only look at f(x). If we play the animation again, you can see that r = x, hence z is dependent on r.
+        {video ends}
+        Thus if we solve z = f(x) in terms of z, we'll get a function where r is dependent on z.
+        With this new function r = x = f(z), we are able to create our area function A(z) = 2 * r(z)^2.
+        {go to MainView}
+        """
         # scene setup
         axes = Axes(
             x_range=[-1, 1, 0.2], x_length=12, y_range=[0, 1.1, 0.1], y_length=5
@@ -101,10 +120,10 @@ def fz(z):
     return 2.0 * math.sqrt(51.0 - 50.0 * z) / math.sqrt(293)
 
 
-class TestStuff(ThreeDScene):
+class MainView(ThreeDScene):
     def construct(self):
-        self.next_section("Graph Setup")
-        
+        self.next_section("Graph Setup", skip_animations=True)
+
         # graph setup
         axis_config = {
             "x_range": (-1, 1, 0.2),
@@ -195,16 +214,27 @@ class TestStuff(ThreeDScene):
         )
         self.wait()
 
-        self.next_section("Function Visualization")
-        
+        self.next_section("Function Visualization", skip_animations=True)
+
+        """
+            Note that the base of the tent is a square. This square can be defined by two identical 
+            parametric curves, with one in the XZ plane and the other in the YZ plane. If we were able
+            to get every square cross section with respect to the z-axis, then we would be able to get
+            the volume of the tent. In other words, we want to integrate some function A(z) from z=0
+            to z=tent_height such that A(z) gets us the area of the square cross section at some 
+            value z.
+            
+        """
+
         self.play(Create(x_graph), Create(y_graph))
         self.begin_ambient_camera_rotation(0.1)
-        self.wait()
+        self.wait(5)
 
-        
-        # square cross section
+        self.next_section("Cross Section Visualization", skip_animations=True)
+
         z = ValueTracker(0)
 
+        # square cross section
         quad_one = always_redraw(
             lambda: Line3D(
                 start=axes.c2p(fz(z.get_value()), 0, z.get_value()),
@@ -233,10 +263,88 @@ class TestStuff(ThreeDScene):
                 color=PURPLE_A,
             )
         )
-        sqr_sec = VGroup(quad_one, quad_two, quad_three, quad_four) 
+        sqr_sec = VGroup(quad_one, quad_two, quad_three, quad_four)
 
-        self.next_section("XZ", skip_animations=True)
-        
+        self.play(Create(sqr_sec, lag_ratio=0.0))
+        self.wait(2.0)
+        self.play(z.animate.set_value(Z_INT), run_time=5.0)
+        self.play(FadeOut(sqr_sec))
+        self.wait(5)
+
+        self.next_section("XY", skip_animations=True)
+
+        """
+            Well, how can we do that? Let's first look at each square cross section from the top down,
+            such that we will be looking at the XY plane. Let's draw in a line r from the
+            center of the square to one of its corners such that r is the square's radius. Now, let's
+            play the animation from before, increasing z from 0 to the tent height. Notice the clear
+            relationship between r and z: they are inversely proportional. Why is this useful? Well
+            that's because we can directly relate the square's radius to its area! {go to TopView}
+        """
+
+        # showing radius in top view
+        dot = always_redraw(
+            lambda: Dot3D(
+                point=axes.c2p(fz(z.get_value()), 0, z.get_value()),
+                color=RED,
+                radius=0.1,
+            )
+        )
+        r_line = always_redraw(
+            lambda: axes.get_horizontal_line(
+                axes.c2p(fz(z.get_value()), 0, 0),
+                color=ORANGE,
+                stroke_width=5.0,
+                line_func=Line,
+            ),
+        )
+        r_obj = always_redraw(
+            lambda: MathTex("r", color=ORANGE).next_to(r_line, DOWN, buff=0.8)
+        )
+        r_val_obj = always_redraw(
+            lambda: MathTex(f"r={round(fz(z.get_value()), 4)}", color=ORANGE).to_edge(
+                UR, buff=0.5
+            )
+        )
+        z_val_obj = always_redraw(
+            lambda: MathTex(
+                f"z={round(z.get_value(), 4)}",
+                color=BLUE,
+            ).next_to(r_val_obj, DOWN, buff=0.5)
+        )
+        # self.add_fixed_orientation_mobjects(dot, r_line, r_obj, r_val_obj, z_val_obj)
+        top_render = VGroup(dot, r_line, r_obj, r_val_obj, z_val_obj)
+
+        self.stop_ambient_camera_rotation()
+        self.move_camera(
+            phi=0 * DEGREES,
+            theta=-90 * DEGREES,
+            gamma=0 * DEGREES,
+            added_anims=[
+                FadeOut(z_axis, z_label),
+                Rotate(y_label, -90 * DEGREES, [0.0, 0.0, 1.0]),
+            ],
+            zoom=0.6,
+        )
+        self.play(z.animate.set_value(0), run_time=0.0)
+        self.play(Write(sqr_sec), run_time=2.0)
+        self.wait()
+        self.play(Create(top_render))
+        self.wait(5)
+
+        self.next_section("XY change z")
+        self.play(z.animate.set_value(Z_INT), run_time=3.0)
+
+        self.next_section("XZ", skip_animations=False)
+
+        """
+            Again, we want the relationship, or in other words, a function relating z and the area, 
+            since we are basically integrating A(z) = 2 * r(z)^2. How can we find this function? Well 
+            first, let's orient ourselves on the XZ plane, such that we are looking at parametric 
+            function on the XZ plane. 
+            {go to SideView}
+        """
+
         # go to XZ plane
         self.move_camera(
             phi=90 * DEGREES,
@@ -244,13 +352,33 @@ class TestStuff(ThreeDScene):
             gamma=0 * DEGREES,
             added_anims=[
                 FadeOut(y_axis, y_label),
+                FadeOut(top_render),
+                FadeIn(z_axis, z_label),
                 Rotate(x_axis, 90 * DEGREES, [1.0, 0.0, 0.0]),
-                Rotate(z_axis, 90 * DEGREES, [0.0, 0.0, 1.0]),
+                # Rotate(z_axis, 90 * DEGREES, [0.0, 0.0, 1.0]),
             ],
             zoom=0.6,
         )
+        self.wait()
 
-        
+        self.next_section("Complete 3D Visualization")
+
+        """
+            If we go back into 3D, we can see all these components in play. Notice how r is thus inversely
+            proportional to both z and A(z), the area of the purple square cross sections.
+        """
+
+        self.move_camera(
+            phi=75 * DEGREES,
+            theta=25 * DEGREES,
+            added_anims=[
+                FadeIn(y_axis, y_label),
+                Rotate(x_axis, -90 * DEGREES, [1.0, 0.0, 0.0]),
+                # Rotate(z_axis, -90 * DEGREES, [0.0, 0.0, 1.0]),
+            ],
+            zoom=0.6,
+        )
+        self.wait()
 
 
 class Intro(ThreeDScene):
@@ -418,9 +546,9 @@ class Intro(ThreeDScene):
         x_label_xz = MathTex("x").shift(RIGHT * 4.0)
         side_render = VGroup(dot_three, trace_lines, x_label_xz)
 
-        # self.next_section("Intro", skip_animations=True)
+        self.next_section("Intro", skip_animations=True)
         self.set_camera_orientation(zoom=0.5)
-        self.play(FadeIn(axes), FadeIn(labels))
+        self.play(FadeIn(axes))  # , FadeIn(labels))
         self.move_camera(phi=75 * DEGREES, theta=30 * DEGREES, zoom=0.75, run_time=1.5)
         self.begin_ambient_camera_rotation(rate=0.15)
         self.play(Create(x_graph), Create(y_graph))
@@ -428,24 +556,24 @@ class Intro(ThreeDScene):
         self.wait(0.5)
         self.play(z.animate.set_value(Z_INT))
         self.wait(0.5)
-        # self.next_section("Transition 1", skip_animations=True)
+        self.next_section("Transition 1", skip_animations=True)
         self.stop_ambient_camera_rotation()
         self.move_camera(phi=0 * DEGREES, theta=-90 * DEGREES, zoom=0.5, run_time=0.5)
         self.play(z.animate.set_value(0))
         self.wait(0.5)
-        # self.next_section("Cross Section", skip_animations=True)
+        self.next_section("Cross Section", skip_animations=True)
         self.play(Create(dot), Create(r_line), Create(r_obj))
         self.play(Create(r_val_obj), Create(z_val_obj))
         self.wait(0.5)
         self.play(z.animate.set_value(Z_INT), run_time=0.5)
         self.wait(0.5)
-        # self.next_section("Transition 2", skip_animations=True)
+        self.next_section("Transition 2", skip_animations=True)
         self.play(FadeOut(sqr_sec), FadeOut(top_render, lag_ratio=0.0), run_time=0.5)
         self.move_camera(phi=90 * DEGREES, zoom=0.75, run_time=1.5)
         self.wait(0.5)
         z.set_value(0)
-        # self.next_section("Side")
-        self.add_fixed_in_frame_mobjects(r_val_obj_xz, z_val_obj_xz, x_label_xz)
+        self.next_section("Side")
+        self.add_fixed_orientation_mobjects(r_val_obj_xz, z_val_obj_xz, x_label_xz)
         self.play(
             Create(trace_lines),
             FadeIn(side_render, lag_ratio=0.0),
@@ -473,7 +601,7 @@ class TopView(Scene):
 
         self.play(FadeIn(sqr))
         self.play(Create(r_line), FadeIn(r_obj))
-        self.wait(0.5)
+        self.wait()
         self.play(Create(d_line), FadeIn(d_obj))
-        self.wait(0.5)
+        self.wait()
         self.play(DrawBorderThenFill(sqr_eqn))
