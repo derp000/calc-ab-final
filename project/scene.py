@@ -229,11 +229,21 @@ class Intro(ThreeDScene):
 class TopView(Scene):
     def construct(self):
         # scene setup
-        sqr = Square(side_length=4.0)
+        sqr = Square(side_length=4.0).shift(UP * 0.5)
         sqr.rotate(45 * DEGREES)
 
-        line = Line(start=sqr.get_center(), end=sqr.get_right(), color=ORANGE)
-        r_obj = MathTex("r", color=ORANGE).next_to(line, DOWN, buff=0.2)
+        r_line = Line(start=sqr.get_center(), end=sqr.get_right(), color=BLUE)
+        r_obj = MathTex("r", color=BLUE).next_to(r_line, DOWN, buff=0.2)
+        d_line = Line(start=sqr.get_top(), end=sqr.get_bottom(), color=RED)
+        d_obj = MathTex("2r", color=RED).next_to(d_line, LEFT, buff=0.2)
+
+        sqr_eqn = MathTex("A = \\frac{1}{2} r \\times 2r = 2r^{2}", color=PURPLE).next_to(
+            sqr, DOWN, buff=0.2
+        )
 
         self.play(FadeIn(sqr))
-        self.play(Create(line), FadeIn(r_obj))
+        self.play(Create(r_line), FadeIn(r_obj))
+        self.wait(0.5)
+        self.play(Create(d_line), FadeIn(d_obj))
+        self.wait(0.5)
+        self.play(DrawBorderThenFill(sqr_eqn))
