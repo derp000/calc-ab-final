@@ -93,3 +93,100 @@ class SideView(Scene):
         self.play(Create(r), Create(z))
         self.wait()
         self.play(x.animate.set_value(0), run_time=10)
+
+
+class ThreeTest(ThreeDScene):
+    def construct(self):
+        axes = ThreeDAxes(
+            x_range=[-1, 1, 0.2],
+            y_range=[-1, 1, 0.2],
+            z_range=[0, 1.1, 0.1],
+            x_length=12,
+            y_length=12,
+            z_length=5,
+        )
+        axes.add_coordinates()
+
+        x_label = axes.get_x_axis_label("x")
+        y_label = axes.get_y_axis_label("y").shift(UP * 1.8)
+        z_label = axes.get_z_axis_label("z")
+        labels = VGroup(x_label, y_label, z_label)
+
+        # setup for z = f(x) = f(y)
+        x_graph = axes.plot_parametric_curve(
+            lambda t: np.array(
+                [
+                    t,
+                    0,
+                    -1.465 * t**2 + 1.02,
+                ]
+            ),
+            t_range=np.array([-CROSS_SEC_INT, CROSS_SEC_INT]),
+            color=GREEN_B,
+        )
+        y_graph = axes.plot_parametric_curve(
+            lambda t: np.array(
+                [
+                    0,
+                    t,
+                    -1.465 * t**2 + 1.02,
+                ]
+            ),
+            t_range=np.array([-CROSS_SEC_INT, CROSS_SEC_INT]),
+            color=GREEN_B,
+        )
+
+        # square cross section
+        quad_one = axes.plot(
+            lambda x: CROSS_SEC_INT - x,
+            x_range=[0, CROSS_SEC_INT],
+            color=PURPLE_A,
+        )
+        quad_two = axes.plot(
+            lambda x: CROSS_SEC_INT + x,
+            x_range=[-CROSS_SEC_INT, 0],
+            color=PURPLE_A,
+        )
+        quad_three = axes.plot(
+            lambda x: -CROSS_SEC_INT - x,
+            x_range=[-CROSS_SEC_INT, 0],
+            color=PURPLE_A,
+        )
+        quad_four = axes.plot(
+            lambda x: -CROSS_SEC_INT + x,
+            x_range=[0, CROSS_SEC_INT],
+            color=PURPLE_A,
+        )
+        sqr_sec = VGroup(quad_one, quad_two, quad_three, quad_four)
+
+        x = ValueTracker(-CROSS_SEC_INT)
+        y = ValueTracker(-CROSS_SEC_INT)
+        dot_x = always_redraw(
+            lambda: Dot3D(
+                point=axes.c2p(x.get_value(), 0, -1.465 * x.get_value() ** 2 + 1.02),
+                color=RED,
+                radius=0.5,
+            )
+        )
+        dot_y = always_redraw(
+            lambda: Dot3D(
+                point=axes.c2p(0, y.get_value(), -1.465 * y.get_value() ** 2 + 1.02),
+                color=RED,
+                radius=0.5,
+            )
+        )
+
+        self.set_camera_orientation(zoom=0.5)
+        self.play(FadeIn(axes), FadeIn(labels))
+        self.move_camera(phi=75 * DEGREES, theta=30 * DEGREES, zoom=0.75, run_time=1.5)
+        self.begin_ambient_camera_rotation(rate=0.15)
+        self.play(Create(x_graph), Create(y_graph))
+        self.play(Create(sqr_sec))
+        self.play(Create(dot_x), Create(dot_y))
+        self.wait(2)
+        self.play(
+            AnimationGroup(x.animate.set_value(CROSS_SEC_INT)),
+            y.animate.set_value(CROSS_SEC_INT),
+            run_time=5,
+        )
+        self.wait(2)
