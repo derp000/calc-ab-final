@@ -101,22 +101,205 @@ def fz(z):
     return 2.0 * math.sqrt(51.0 - 50.0 * z) / math.sqrt(293)
 
 
+class TestStuff(ThreeDScene):
+    def construct(self):
+        self.next_section("Graph Setup")
+        
+        # graph setup
+        axis_config = {
+            "x_range": (-1, 1, 0.2),
+            "y_range": (-1, 1, 0.2),
+            "z_range": (0, 1.1, 0.1),
+            "x_length": 11,
+            "y_length": 11,
+            "z_length": 7,
+        }
+        axes = ThreeDAxes(**axis_config)
+        # ax = ThreeDAxes()
+        # x_labels = range(-4, 5)
+        # z_labels = range(-4, 4, 2)
+        # ax.add_coordinates(x_labels, None, z_labels)  # default y labels, custom x & z labels
+        # ax.add_coordinates(x_labels)  # only x labels
+        x_axis = axes.get_x_axis()
+        x_label = axes.get_x_axis_label("x")
+        y_axis = axes.get_y_axis()
+        y_label = axes.get_y_axis_label("y")
+        z_axis = axes.get_z_axis()
+        z_label = axes.get_z_axis_label("z")
+
+        # axes.add_coordinates(
+        #     np.linspace(-1, 1, 10, endpoint=False),
+        #     np.linspace(-1, 1, 10, endpoint=False),
+        #     range(0),
+        # )
+        graph = VGroup(x_axis, y_axis, z_axis, x_label, y_label, z_label)
+        self.add(graph)
+
+        # axes setup
+        # make z-axis face camera
+        z_axis.rotate(90 * DEGREES, [0.0, 0.0, 1.0])
+        # needed since z begins on the XY plane
+        z_label.rotate(90 * DEGREES, [1.0, 0.0, 0.0])
+        z_label.rotate(180 * DEGREES, [0.0, 1.0, 0.0])
+
+        # orient labels
+        x_label.move_to([6.0, 0.0, 0.0])
+        y_label.move_to([0.0, 6.0, 0.0])
+        z_label.move_to([0.0, 0.0, 7.5])
+        self.add_fixed_orientation_mobjects(x_label, y_label, z_label)
+        # don't want z-label visible at the start
+        self.remove(z_label)
+
+        # setup for z = f(x) = f(y)
+        x_graph = axes.plot_parametric_curve(
+            lambda t: np.array(
+                [
+                    t,
+                    0,
+                    -1.465 * t**2 + 1.02,
+                ]
+            ),
+            t_range=np.array([-CROSS_SEC_INT, CROSS_SEC_INT]),
+            color=GREEN_B,
+        )
+        y_graph = axes.plot_parametric_curve(
+            lambda t: np.array(
+                [
+                    0,
+                    t,
+                    -1.465 * t**2 + 1.02,
+                ]
+            ),
+            t_range=np.array([-CROSS_SEC_INT, CROSS_SEC_INT]),
+            color=GREEN_B,
+        )
+
+        # initial cam orientation
+        self.set_camera_orientation(
+            phi=0 * DEGREES,
+            theta=-90 * DEGREES,
+            gamma=0 * DEGREES,
+            frame_center=axes.get_center(),
+            zoom=0.6,
+        )
+
+        # shift to 3D view
+        self.wait()
+        self.move_camera(
+            phi=75 * DEGREES,
+            theta=25 * DEGREES,
+            zoom=0.6,
+            added_anims=[
+                Write(z_label),
+            ],
+        )
+        self.wait()
+
+        self.next_section("Function Visualization")
+        
+        self.play(Create(x_graph), Create(y_graph))
+        self.begin_ambient_camera_rotation(0.1)
+        self.wait()
+
+        
+        # square cross section
+        z = ValueTracker(0)
+
+        quad_one = always_redraw(
+            lambda: Line3D(
+                start=axes.c2p(fz(z.get_value()), 0, z.get_value()),
+                end=axes.c2p(0, fz(z.get_value()), z.get_value()),
+                color=PURPLE_A,
+            )
+        )
+        quad_two = always_redraw(
+            lambda: Line3D(
+                start=axes.c2p(-fz(z.get_value()), 0, z.get_value()),
+                end=axes.c2p(0, fz(z.get_value()), z.get_value()),
+                color=PURPLE_A,
+            )
+        )
+        quad_three = always_redraw(
+            lambda: Line3D(
+                start=axes.c2p(-fz(z.get_value()), 0, z.get_value()),
+                end=axes.c2p(0, -fz(z.get_value()), z.get_value()),
+                color=PURPLE_A,
+            )
+        )
+        quad_four = always_redraw(
+            lambda: Line3D(
+                start=axes.c2p(fz(z.get_value()), 0, z.get_value()),
+                end=axes.c2p(0, -fz(z.get_value()), z.get_value()),
+                color=PURPLE_A,
+            )
+        )
+        sqr_sec = VGroup(quad_one, quad_two, quad_three, quad_four) 
+
+        self.next_section("XZ", skip_animations=True)
+        
+        # go to XZ plane
+        self.move_camera(
+            phi=90 * DEGREES,
+            theta=-90 * DEGREES,
+            gamma=0 * DEGREES,
+            added_anims=[
+                FadeOut(y_axis, y_label),
+                Rotate(x_axis, 90 * DEGREES, [1.0, 0.0, 0.0]),
+                Rotate(z_axis, 90 * DEGREES, [0.0, 0.0, 1.0]),
+            ],
+            zoom=0.6,
+        )
+
+        
+
+
 class Intro(ThreeDScene):
     def construct(self):
-        axes = ThreeDAxes(
-            x_range=[-1, 1, 0.2],
-            y_range=[-1, 1, 0.2],
-            z_range=[0, 1.1, 0.1],
-            x_length=12,
-            y_length=12,
-            z_length=5,
-        )
-        axes.add_coordinates()
-
+        # graph setup
+        axis_config = {
+            "x_range": (-1, 1, 0.2),
+            "y_range": (-1, 1, 0.2),
+            "z_range": (0, 1.1, 0.1),
+            "x_length": 11,
+            "y_length": 11,
+            "z_length": 7,
+        }
+        axes = ThreeDAxes(**axis_config)
+        x_axis = axes.get_x_axis()
         x_label = axes.get_x_axis_label("x")
-        y_label = axes.get_y_axis_label("y").shift(UP * 1.8)
+        y_axis = axes.get_y_axis()
+        y_label = axes.get_y_axis_label("y")
+        z_axis = axes.get_z_axis()
         z_label = axes.get_z_axis_label("z")
-        labels = VGroup(x_label, y_label, z_label)
+
+        graph = VGroup(x_axis, y_axis, z_axis, x_label, y_label, z_label)
+        self.play(Create(graph))
+
+        # make z-axis face camera
+        z_axis.rotate(90 * DEGREES, [0.0, 0.0, 1.0])
+        # needed since z begins on the XY plane
+        z_label.rotate(90 * DEGREES, [1.0, 0.0, 0.0])
+        z_label.rotate(180 * DEGREES, [0.0, 1.0, 0.0])
+        x_label.move_to([6.0, 0.0, 0.0])
+        y_label.move_to([0.0, 6.0, 0.0])
+        z_label.move_to([0.0, 0.0, 4.0])
+        self.add_fixed_orientation_mobjects(x_label, y_label, z_label)
+
+        self.remove(z_label)
+        # axes = ThreeDAxes(
+        #     x_range=[-1, 1, 0.2],
+        #     y_range=[-1, 1, 0.2],
+        #     z_range=[0, 1.1, 0.1],
+        #     x_length=11,
+        #     y_length=11,
+        #     z_length=7,
+        # )
+        # axes.add_coordinates()
+
+        # x_label = axes.get_x_axis_label("x")
+        # y_label = axes.get_y_axis_label("y").shift(UP * 1.8)
+        # z_label = axes.get_z_axis_label("z")
+        # labels = VGroup(x_label, y_label, z_label)
 
         # setup for z = f(x) = f(y)
         x_graph = axes.plot_parametric_curve(
@@ -232,7 +415,7 @@ class Intro(ThreeDScene):
         )
         r_val_obj_xz.scale(0.6)
         z_val_obj_xz.scale(0.6)
-        x_label_xz = MathTex("x").shift(RIGHT*4.0)
+        x_label_xz = MathTex("x").shift(RIGHT * 4.0)
         side_render = VGroup(dot_three, trace_lines, x_label_xz)
 
         # self.next_section("Intro", skip_animations=True)
