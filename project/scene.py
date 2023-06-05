@@ -96,8 +96,8 @@ class SideView(Scene):
         self.play(x.animate.set_value(0), run_time=10)
 
 
-# z = f(x) = f(y) ITO z is 2sqrt(51-50z)/sqrt(293)
-def fx_ito_z(z):
+# z = f(x) = f(y) ITO z is f(z) = 2sqrt(51-50z)/sqrt(293)
+def fz(z):
     return 2.0 * math.sqrt(51.0 - 50.0 * z) / math.sqrt(293)
 
 
@@ -147,35 +147,64 @@ class Intro(ThreeDScene):
         # square cross section
         quad_one = always_redraw(
             lambda: Line3D(
-                start=axes.c2p(fx_ito_z(z.get_value()), 0, z.get_value()),
-                end=axes.c2p(0, fx_ito_z(z.get_value()), z.get_value()),
+                start=axes.c2p(fz(z.get_value()), 0, z.get_value()),
+                end=axes.c2p(0, fz(z.get_value()), z.get_value()),
                 color=PURPLE_A,
             )
         )
         quad_two = always_redraw(
             lambda: Line3D(
-                start=axes.c2p(-fx_ito_z(z.get_value()), 0, z.get_value()),
-                end=axes.c2p(0, fx_ito_z(z.get_value()), z.get_value()),
+                start=axes.c2p(-fz(z.get_value()), 0, z.get_value()),
+                end=axes.c2p(0, fz(z.get_value()), z.get_value()),
                 color=PURPLE_A,
             )
         )
         quad_three = always_redraw(
             lambda: Line3D(
-                start=axes.c2p(-fx_ito_z(z.get_value()), 0, z.get_value()),
-                end=axes.c2p(0, -fx_ito_z(z.get_value()), z.get_value()),
+                start=axes.c2p(-fz(z.get_value()), 0, z.get_value()),
+                end=axes.c2p(0, -fz(z.get_value()), z.get_value()),
                 color=PURPLE_A,
             )
         )
         quad_four = always_redraw(
             lambda: Line3D(
-                start=axes.c2p(fx_ito_z(z.get_value()), 0, z.get_value()),
-                end=axes.c2p(0, -fx_ito_z(z.get_value()), z.get_value()),
+                start=axes.c2p(fz(z.get_value()), 0, z.get_value()),
+                end=axes.c2p(0, -fz(z.get_value()), z.get_value()),
                 color=PURPLE_A,
             )
         )
         sqr_sec = VGroup(quad_one, quad_two, quad_three, quad_four)
-        rendered = VGroup(axes, labels, x_graph, y_graph)
 
+        dot = always_redraw(
+            lambda: Dot(
+                point=axes.c2p(fz(z.get_value()), 0, 0),
+                color=RED,
+            )
+        )
+        r_line = always_redraw(
+            lambda: axes.get_horizontal_line(
+                axes.c2p(fz(z.get_value()), 0, 0),
+                color=ORANGE,
+                stroke_width=10.0,
+                line_func=Line,
+            ),
+        )
+        r_obj = always_redraw(
+            lambda: MathTex("r", color=ORANGE).next_to(r_line, DOWN, buff=0.8)
+        )
+        r_val_obj = always_redraw(
+            lambda: MathTex(f"r={round(fz(z.get_value()), 4)}", color=ORANGE).to_edge(
+                UR, buff=0.5
+            )
+        )
+        z_val_obj = always_redraw(
+            lambda: MathTex(
+                f"z={round(z.get_value(), 4)}",
+                color=BLUE,
+            ).next_to(r_val_obj, DOWN, buff=0.5)
+        )
+
+        self.next_section("Intro", skip_animations=True)
         self.set_camera_orientation(zoom=0.5)
         self.play(FadeIn(axes), FadeIn(labels))
         self.move_camera(phi=75 * DEGREES, theta=30 * DEGREES, zoom=0.75, run_time=1.5)
@@ -187,4 +216,24 @@ class Intro(ThreeDScene):
         self.wait(0.5)
         self.stop_ambient_camera_rotation()
         self.move_camera(phi=0 * DEGREES, theta=-90 * DEGREES, zoom=0.5, run_time=0.5)
-        self.play(FadeOut(rendered, lag_ratio=0.0), run_time=0.5)
+        self.play(z.animate.set_value(0))
+        self.wait(0.5)
+        self.next_section("Cross Section")
+        self.play(Create(dot), Create(r_line), Create(r_obj))
+        self.play(Create(r_val_obj), Create(z_val_obj))
+        self.wait(0.5)
+        self.play(z.animate.set_value(Z_INT), run_time=0.5)
+        # self.play(FadeOut(rendered, lag_ratio=0.0), run_time=0.5)
+
+
+class TopView(Scene):
+    def construct(self):
+        # scene setup
+        sqr = Square(side_length=4.0)
+        sqr.rotate(45 * DEGREES)
+
+        line = Line(start=sqr.get_center(), end=sqr.get_right(), color=ORANGE)
+        r_obj = MathTex("r", color=ORANGE).next_to(line, DOWN, buff=0.2)
+
+        self.play(FadeIn(sqr))
+        self.play(Create(line), FadeIn(r_obj))
