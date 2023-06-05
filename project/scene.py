@@ -2,6 +2,7 @@ from manim import *
 import math
 
 CROSS_SEC_INT = 1.18 * math.sqrt(2) / 2.0
+Z_INT = 1.02
 
 
 class SideView(Scene):
@@ -95,7 +96,12 @@ class SideView(Scene):
         self.play(x.animate.set_value(0), run_time=10)
 
 
-class ThreeTest(ThreeDScene):
+# z = f(x) = f(y) ITO z is 2sqrt(51-50z)/sqrt(293)
+def fx_ito_z(z):
+    return 2.0 * math.sqrt(51.0 - 50.0 * z) / math.sqrt(293)
+
+
+class Intro(ThreeDScene):
     def construct(self):
         axes = ThreeDAxes(
             x_range=[-1, 1, 0.2],
@@ -136,45 +142,39 @@ class ThreeTest(ThreeDScene):
             color=GREEN_B,
         )
 
+        z = ValueTracker(0)
+
         # square cross section
-        quad_one = axes.plot(
-            lambda x: CROSS_SEC_INT - x,
-            x_range=[0, CROSS_SEC_INT],
-            color=PURPLE_A,
+        quad_one = always_redraw(
+            lambda: Line3D(
+                start=axes.c2p(fx_ito_z(z.get_value()), 0, z.get_value()),
+                end=axes.c2p(0, fx_ito_z(z.get_value()), z.get_value()),
+                color=PURPLE_A,
+            )
         )
-        quad_two = axes.plot(
-            lambda x: CROSS_SEC_INT + x,
-            x_range=[-CROSS_SEC_INT, 0],
-            color=PURPLE_A,
+        quad_two = always_redraw(
+            lambda: Line3D(
+                start=axes.c2p(-fx_ito_z(z.get_value()), 0, z.get_value()),
+                end=axes.c2p(0, fx_ito_z(z.get_value()), z.get_value()),
+                color=PURPLE_A,
+            )
         )
-        quad_three = axes.plot(
-            lambda x: -CROSS_SEC_INT - x,
-            x_range=[-CROSS_SEC_INT, 0],
-            color=PURPLE_A,
+        quad_three = always_redraw(
+            lambda: Line3D(
+                start=axes.c2p(-fx_ito_z(z.get_value()), 0, z.get_value()),
+                end=axes.c2p(0, -fx_ito_z(z.get_value()), z.get_value()),
+                color=PURPLE_A,
+            )
         )
-        quad_four = axes.plot(
-            lambda x: -CROSS_SEC_INT + x,
-            x_range=[0, CROSS_SEC_INT],
-            color=PURPLE_A,
+        quad_four = always_redraw(
+            lambda: Line3D(
+                start=axes.c2p(fx_ito_z(z.get_value()), 0, z.get_value()),
+                end=axes.c2p(0, -fx_ito_z(z.get_value()), z.get_value()),
+                color=PURPLE_A,
+            )
         )
         sqr_sec = VGroup(quad_one, quad_two, quad_three, quad_four)
-
-        x = ValueTracker(-CROSS_SEC_INT)
-        y = ValueTracker(-CROSS_SEC_INT)
-        dot_x = always_redraw(
-            lambda: Dot3D(
-                point=axes.c2p(x.get_value(), 0, -1.465 * x.get_value() ** 2 + 1.02),
-                color=RED,
-                radius=0.5,
-            )
-        )
-        dot_y = always_redraw(
-            lambda: Dot3D(
-                point=axes.c2p(0, y.get_value(), -1.465 * y.get_value() ** 2 + 1.02),
-                color=RED,
-                radius=0.5,
-            )
-        )
+        rendered = VGroup(axes, labels, x_graph, y_graph)
 
         self.set_camera_orientation(zoom=0.5)
         self.play(FadeIn(axes), FadeIn(labels))
@@ -182,11 +182,9 @@ class ThreeTest(ThreeDScene):
         self.begin_ambient_camera_rotation(rate=0.15)
         self.play(Create(x_graph), Create(y_graph))
         self.play(Create(sqr_sec))
-        self.play(Create(dot_x), Create(dot_y))
-        self.wait(2)
-        self.play(
-            AnimationGroup(x.animate.set_value(CROSS_SEC_INT)),
-            y.animate.set_value(CROSS_SEC_INT),
-            run_time=5,
-        )
-        self.wait(2)
+        self.wait(0.5)
+        self.play(z.animate.set_value(Z_INT))
+        self.wait(0.5)
+        self.stop_ambient_camera_rotation()
+        self.move_camera(phi=0 * DEGREES, theta=-90 * DEGREES, zoom=0.5, run_time=0.5)
+        self.play(FadeOut(rendered, lag_ratio=0.0), run_time=0.5)
