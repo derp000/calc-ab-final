@@ -5,116 +5,6 @@ CROSS_SEC_INT = 1.18 * math.sqrt(2) / 2.0
 Z_INT = 1.02
 
 
-class SideView(Scene):
-    def construct(self):
-        """
-        We didn't mention how the function was defined at first, but it is z = -1.465x^2 + 1.02. 
-        And in the YZ plane, it is z = -1.465y^2 + 1.02. We found this by finding the length of the
-        tent, which was 1.18 m. This was the hypotenuse of a 45-45-90 triangle. We decided to make the
-        corners of the tent's square base (or the legs of the triangle) our XY axes, so that meant 
-        that the intercepts were all at plus or minus 1.18/sqrt(2). 
-
-        Based on these intercepts, our equations could be found by doing 
-        f(x) = a * (x + 1.18/sqrt(2)) * (x - 1.18/sqrt(2)) and substituting the y-intercept (0, 1.02 m), 
-        which is the height. The a value of -1.465 is then substituted back into this equation. Upon rearranging, 
-        you get -1.465x^2 + 1.02.
-        
-        In other words, that means z = f(x) = f(y). Since the graph of f(x) and f(y) are basically the same, 
-        we'll only look at f(x). If we play the animation again, you can see that r = x, hence z is dependent on r.
-        {video ends}
-        Thus if we solve z = f(x) in terms of z, we'll get a function where r is dependent on z.
-        With this new function r = x = f(z), we are able to create our area function A(z) = 2 * r(z)^2.
-        {go to MainView}
-        """
-        # scene setup
-        axes = Axes(
-            x_range=[-1, 1, 0.2], x_length=12, y_range=[0, 1.1, 0.1], y_length=5
-        )
-        axes.add_coordinates()
-
-        # graph setup
-        x_label = axes.get_x_axis_label("x")
-        z_label = axes.get_y_axis_label("z")
-        axes_labels = VGroup(x_label, z_label)
-
-        # function setup
-        cross_sec_graph = axes.plot(
-            lambda x: -1.465 * x**2 + 1.02,
-            x_range=[-CROSS_SEC_INT, CROSS_SEC_INT],
-            color=GREEN_B,
-        )
-        x_r_int = VGroup(
-            Dot(point=axes.c2p(CROSS_SEC_INT, 0, 0), color=BLUE),
-            MathTex("(1.18 \\frac{ \sqrt{2} }{2}, 0)")
-            .scale(0.75)
-            .next_to(axes.c2p(CROSS_SEC_INT, 0, 0), UP, buff=0.2),
-        )
-        x_l_int = VGroup(
-            Dot(point=axes.c2p(-CROSS_SEC_INT, 0, 0), color=BLUE),
-            MathTex("(-1.18 \\frac{ \sqrt{2} }{2}, 0)")
-            .scale(0.75)
-            .next_to(axes.c2p(-CROSS_SEC_INT, 0, 0), UP, buff=0.2),
-        )
-        y_int = VGroup(
-            Dot(point=axes.c2p(0, 1.02, 0), color=BLUE),
-            MathTex("(0, 1.02)")
-            .scale(0.75)
-            .next_to(axes.c2p(0, 1.02, 0), RIGHT, buff=0.2),
-        )
-        points = VGroup(x_r_int, x_l_int, y_int)
-        func = MathTex("f(x) = -1.465x^{2} + 1.02").next_to(axes, UP, buff=0.4)
-
-        # dot and liens tracing the function
-        x = ValueTracker(CROSS_SEC_INT)
-        dot = always_redraw(
-            lambda: Dot(
-                point=axes.c2p(
-                    x.get_value(), cross_sec_graph.underlying_function(x.get_value()), 0
-                ),
-                color=RED,
-            )
-        )
-        lines = always_redraw(
-            lambda: axes.get_lines_to_point(
-                axes.c2p(
-                    x.get_value(), cross_sec_graph.underlying_function(x.get_value()), 0
-                )
-            ),
-        )
-        r_line = always_redraw(
-            lambda: axes.get_horizontal_line(
-                axes.c2p(x.get_value(), 0, 0),
-                color=ORANGE,
-                stroke_width=10.0,
-                line_func=Line,
-            ),
-        )
-        r_tex = always_redraw(
-            lambda: MathTex("r", color=ORANGE).next_to(r_line, DOWN, buff=0.8)
-        )
-        r = always_redraw(
-            lambda: MathTex(f"r={round(x.get_value(), 4)}", color=ORANGE).to_edge(
-                UR, buff=2.0
-            )
-        )
-        z = always_redraw(
-            lambda: MathTex(
-                f"z={round(cross_sec_graph.underlying_function(x.get_value()), 4)}",
-                color=BLUE,
-            ).next_to(r, DOWN, buff=0.5)
-        )
-
-        self.play(DrawBorderThenFill(axes), run_time=2)
-        self.play(DrawBorderThenFill(axes_labels))
-        self.play(Create(cross_sec_graph), Write(func), run_time=2)
-        self.play(Create(points, lag_ratio=0), run_time=3)
-        self.wait()
-        self.play(Create(dot), Create(lines), Create(r_line), Create(r_tex))
-        self.play(Create(r), Create(z))
-        self.wait()
-        self.play(x.animate.set_value(0), run_time=10)
-
-
 # z = f(x) = f(y) ITO z is f(z) = 2sqrt(51-50z)/sqrt(293)
 def fz(z):
     return 2.0 * math.sqrt(51.0 - 50.0 * z) / math.sqrt(293)
@@ -326,16 +216,22 @@ class MainView(ThreeDScene):
             ],
             zoom=0.6,
         )
-        self.play(z.animate.set_value(0), run_time=0.0)
+        self.play(z.animate.set_value(0), run_time=0.1)
+        self.wait(0.1)
         self.play(Write(sqr_sec), run_time=2.0)
         self.wait()
         self.play(Create(top_render))
         self.wait(5)
 
-        self.next_section("XY change z")
+        self.next_section("XY change z", skip_animations=True)
+
+        """
+            {Transition to TopView}
+        """
+
         self.play(z.animate.set_value(Z_INT), run_time=3.0)
 
-        self.next_section("XZ", skip_animations=False)
+        self.next_section("XZ", skip_animations=True)
 
         """
             Again, we want the relationship, or in other words, a function relating z and the area, 
@@ -352,14 +248,14 @@ class MainView(ThreeDScene):
             gamma=0 * DEGREES,
             added_anims=[
                 FadeOut(y_axis, y_label),
-                FadeOut(top_render),
+                FadeOut(top_render, sqr_sec),
                 FadeIn(z_axis, z_label),
                 Rotate(x_axis, 90 * DEGREES, [1.0, 0.0, 0.0]),
                 # Rotate(z_axis, 90 * DEGREES, [0.0, 0.0, 1.0]),
             ],
             zoom=0.6,
         )
-        self.wait()
+        self.wait(5)
 
         self.next_section("Complete 3D Visualization")
 
@@ -368,220 +264,28 @@ class MainView(ThreeDScene):
             proportional to both z and A(z), the area of the purple square cross sections.
         """
 
-        self.move_camera(
-            phi=75 * DEGREES,
-            theta=25 * DEGREES,
-            added_anims=[
-                FadeIn(y_axis, y_label),
-                Rotate(x_axis, -90 * DEGREES, [1.0, 0.0, 0.0]),
-                # Rotate(z_axis, -90 * DEGREES, [0.0, 0.0, 1.0]),
-            ],
-            zoom=0.6,
-        )
-        self.wait()
+        self.play(z.animate.set_value(0), run_time=0.1)
+        self.wait(0.1)
 
-
-class Intro(ThreeDScene):
-    def construct(self):
-        # graph setup
-        axis_config = {
-            "x_range": (-1, 1, 0.2),
-            "y_range": (-1, 1, 0.2),
-            "z_range": (0, 1.1, 0.1),
-            "x_length": 11,
-            "y_length": 11,
-            "z_length": 7,
-        }
-        axes = ThreeDAxes(**axis_config)
-        x_axis = axes.get_x_axis()
-        x_label = axes.get_x_axis_label("x")
-        y_axis = axes.get_y_axis()
-        y_label = axes.get_y_axis_label("y")
-        z_axis = axes.get_z_axis()
-        z_label = axes.get_z_axis_label("z")
-
-        graph = VGroup(x_axis, y_axis, z_axis, x_label, y_label, z_label)
-        self.play(Create(graph))
-
-        # make z-axis face camera
-        z_axis.rotate(90 * DEGREES, [0.0, 0.0, 1.0])
-        # needed since z begins on the XY plane
-        z_label.rotate(90 * DEGREES, [1.0, 0.0, 0.0])
-        z_label.rotate(180 * DEGREES, [0.0, 1.0, 0.0])
-        x_label.move_to([6.0, 0.0, 0.0])
-        y_label.move_to([0.0, 6.0, 0.0])
-        z_label.move_to([0.0, 0.0, 4.0])
-        self.add_fixed_orientation_mobjects(x_label, y_label, z_label)
-
-        self.remove(z_label)
-        # axes = ThreeDAxes(
-        #     x_range=[-1, 1, 0.2],
-        #     y_range=[-1, 1, 0.2],
-        #     z_range=[0, 1.1, 0.1],
-        #     x_length=11,
-        #     y_length=11,
-        #     z_length=7,
-        # )
-        # axes.add_coordinates()
-
-        # x_label = axes.get_x_axis_label("x")
-        # y_label = axes.get_y_axis_label("y").shift(UP * 1.8)
-        # z_label = axes.get_z_axis_label("z")
-        # labels = VGroup(x_label, y_label, z_label)
-
-        # setup for z = f(x) = f(y)
-        x_graph = axes.plot_parametric_curve(
-            lambda t: np.array(
-                [
-                    t,
-                    0,
-                    -1.465 * t**2 + 1.02,
-                ]
-            ),
-            t_range=np.array([-CROSS_SEC_INT, CROSS_SEC_INT]),
-            color=GREEN_B,
-        )
-        y_graph = axes.plot_parametric_curve(
-            lambda t: np.array(
-                [
-                    0,
-                    t,
-                    -1.465 * t**2 + 1.02,
-                ]
-            ),
-            t_range=np.array([-CROSS_SEC_INT, CROSS_SEC_INT]),
-            color=GREEN_B,
-        )
-
-        z = ValueTracker(0)
-
-        # square cross section
-        quad_one = always_redraw(
-            lambda: Line3D(
-                start=axes.c2p(fz(z.get_value()), 0, z.get_value()),
-                end=axes.c2p(0, fz(z.get_value()), z.get_value()),
-                color=PURPLE_A,
-            )
-        )
-        quad_two = always_redraw(
-            lambda: Line3D(
-                start=axes.c2p(-fz(z.get_value()), 0, z.get_value()),
-                end=axes.c2p(0, fz(z.get_value()), z.get_value()),
-                color=PURPLE_A,
-            )
-        )
-        quad_three = always_redraw(
-            lambda: Line3D(
-                start=axes.c2p(-fz(z.get_value()), 0, z.get_value()),
-                end=axes.c2p(0, -fz(z.get_value()), z.get_value()),
-                color=PURPLE_A,
-            )
-        )
-        quad_four = always_redraw(
-            lambda: Line3D(
-                start=axes.c2p(fz(z.get_value()), 0, z.get_value()),
-                end=axes.c2p(0, -fz(z.get_value()), z.get_value()),
-                color=PURPLE_A,
-            )
-        )
-        sqr_sec = VGroup(quad_one, quad_two, quad_three, quad_four)
-
-        # showing radius in top view
-        dot = always_redraw(
-            lambda: Dot(
-                point=axes.c2p(fz(z.get_value()), 0, 0),
-                color=RED,
-            )
-        )
-        r_line = always_redraw(
-            lambda: axes.get_horizontal_line(
-                axes.c2p(fz(z.get_value()), 0, 0),
-                color=ORANGE,
-                stroke_width=10.0,
-                line_func=Line,
-            ),
-        )
-        r_obj = always_redraw(
-            lambda: MathTex("r", color=ORANGE).next_to(r_line, DOWN, buff=0.8)
-        )
-        r_val_obj = always_redraw(
-            lambda: MathTex(f"r={round(fz(z.get_value()), 4)}", color=ORANGE).to_edge(
-                UR, buff=0.5
-            )
-        )
-        z_val_obj = always_redraw(
-            lambda: MathTex(
-                f"z={round(z.get_value(), 4)}",
-                color=BLUE,
-            ).next_to(r_val_obj, DOWN, buff=0.5)
-        )
-        top_render = VGroup(dot, r_line, r_obj, r_val_obj, z_val_obj)
-
-        # showing radius in side view
-        dot_three = always_redraw(
-            lambda: Dot3D(
-                point=axes.c2p(fz(z.get_value()), 0, z.get_value()),
-                color=RED,
-                radius=0.2,
-            )
-        )
         trace_lines = always_redraw(
             lambda: axes.get_lines_to_point(
                 axes.c2p(fz(z.get_value()), 0, z.get_value())
             ),
         )
-        r_val_obj_xz = always_redraw(
-            lambda: MathTex(f"r=x={round(fz(z.get_value()), 4)}", color=ORANGE).shift(
-                DOWN * 2.0
-            )
-        )
-        z_val_obj_xz = always_redraw(
-            lambda: MathTex(
-                f"z=f(x)={round(z.get_value(), 4)}",
-                color=BLUE,
-            ).next_to(r_val_obj_xz, DOWN, buff=0.5)
-        )
-        r_val_obj_xz.scale(0.6)
-        z_val_obj_xz.scale(0.6)
-        x_label_xz = MathTex("x").shift(RIGHT * 4.0)
-        side_render = VGroup(dot_three, trace_lines, x_label_xz)
 
-        self.next_section("Intro", skip_animations=True)
-        self.set_camera_orientation(zoom=0.5)
-        self.play(FadeIn(axes))  # , FadeIn(labels))
-        self.move_camera(phi=75 * DEGREES, theta=30 * DEGREES, zoom=0.75, run_time=1.5)
-        self.begin_ambient_camera_rotation(rate=0.15)
-        self.play(Create(x_graph), Create(y_graph))
-        self.play(Create(sqr_sec))
-        self.wait(0.5)
-        self.play(z.animate.set_value(Z_INT))
-        self.wait(0.5)
-        self.next_section("Transition 1", skip_animations=True)
-        self.stop_ambient_camera_rotation()
-        self.move_camera(phi=0 * DEGREES, theta=-90 * DEGREES, zoom=0.5, run_time=0.5)
-        self.play(z.animate.set_value(0))
-        self.wait(0.5)
-        self.next_section("Cross Section", skip_animations=True)
-        self.play(Create(dot), Create(r_line), Create(r_obj))
-        self.play(Create(r_val_obj), Create(z_val_obj))
-        self.wait(0.5)
-        self.play(z.animate.set_value(Z_INT), run_time=0.5)
-        self.wait(0.5)
-        self.next_section("Transition 2", skip_animations=True)
-        self.play(FadeOut(sqr_sec), FadeOut(top_render, lag_ratio=0.0), run_time=0.5)
-        self.move_camera(phi=90 * DEGREES, zoom=0.75, run_time=1.5)
-        self.wait(0.5)
-        z.set_value(0)
-        self.next_section("Side")
-        self.add_fixed_orientation_mobjects(r_val_obj_xz, z_val_obj_xz, x_label_xz)
-        self.play(
-            Create(trace_lines),
-            FadeIn(side_render, lag_ratio=0.0),
-            FadeIn(r_line),
-            FadeIn(r_val_obj_xz),
-            FadeIn(z_val_obj_xz),
+        self.move_camera(
+            phi=75 * DEGREES,
+            theta=-25 * DEGREES,
+            added_anims=[
+                FadeIn(y_axis, y_label),
+                Rotate(x_axis, -90 * DEGREES, [1.0, 0.0, 0.0]),
+            ],
+            zoom=0.6,
         )
-        self.play(z.animate.set_value(Z_INT))
+        self.wait()
+        self.play(FadeIn(dot, r_line, r_obj, trace_lines, sqr_sec))
+        self.play(z.animate.set_value(Z_INT), run_time=10)
+        self.wait(5)
 
 
 class TopView(Scene):
@@ -605,3 +309,113 @@ class TopView(Scene):
         self.play(Create(d_line), FadeIn(d_obj))
         self.wait()
         self.play(DrawBorderThenFill(sqr_eqn))
+
+
+class SideView(Scene):
+    def construct(self):
+        """
+        We didn't mention how the function was defined at first, but it is z = -1.465x^2 + 1.02.
+        And in the YZ plane, it is z = -1.465y^2 + 1.02. We found this by finding the length of the
+        tent, which was 1.18 m. This was the hypotenuse of a 45-45-90 triangle. We decided to make the
+        corners of the tent's square base (or the legs of the triangle) our XY axes, so that meant
+        that the intercepts were all at plus or minus 1.18/sqrt(2).
+
+        Based on these intercepts, our equations could be found by doing
+        f(x) = a * (x + 1.18/sqrt(2)) * (x - 1.18/sqrt(2)) and substituting the y-intercept (0, 1.02 m),
+        which is the height. The a value of -1.465 is then substituted back into this equation. Upon rearranging,
+        you get -1.465x^2 + 1.02.
+
+        In other words, that means z = f(x) = f(y). Since the graph of f(x) and f(y) are basically the same,
+        we'll only look at f(x). If we play the animation again, you can see that r = x, hence z is dependent on r.
+        {video ends}
+        Thus if we solve z = f(x) in terms of z, we'll get a function where r is dependent on z.
+        With this new function r = x = f(z), we are able to create our area function A(z) = 2 * r(z)^2.
+        {go to MainView}
+        """
+        # scene setup
+        axes = Axes(
+            x_range=[-1, 1, 0.2], x_length=12, y_range=[0, 1.1, 0.1], y_length=5
+        )
+        axes.add_coordinates()
+
+        # graph setup
+        x_label = axes.get_x_axis_label("x")
+        z_label = axes.get_y_axis_label("z")
+        axes_labels = VGroup(x_label, z_label)
+
+        # function setup
+        cross_sec_graph = axes.plot(
+            lambda x: -1.465 * x**2 + 1.02,
+            x_range=[-CROSS_SEC_INT, CROSS_SEC_INT],
+            color=GREEN_B,
+        )
+        x_r_int = VGroup(
+            Dot(point=axes.c2p(CROSS_SEC_INT, 0, 0), color=BLUE),
+            MathTex("(1.18 \\frac{ \sqrt{2} }{2}, 0)")
+            .scale(0.75)
+            .next_to(axes.c2p(CROSS_SEC_INT, 0, 0), UP, buff=0.2),
+        )
+        x_l_int = VGroup(
+            Dot(point=axes.c2p(-CROSS_SEC_INT, 0, 0), color=BLUE),
+            MathTex("(-1.18 \\frac{ \sqrt{2} }{2}, 0)")
+            .scale(0.75)
+            .next_to(axes.c2p(-CROSS_SEC_INT, 0, 0), UP, buff=0.2),
+        )
+        y_int = VGroup(
+            Dot(point=axes.c2p(0, 1.02, 0), color=BLUE),
+            MathTex("(0, 1.02)")
+            .scale(0.75)
+            .next_to(axes.c2p(0, 1.02, 0), RIGHT, buff=0.2),
+        )
+        points = VGroup(x_r_int, x_l_int, y_int)
+        func = MathTex("f(x) = -1.465x^{2} + 1.02").next_to(axes, UP, buff=0.4)
+
+        # dot and liens tracing the function
+        x = ValueTracker(CROSS_SEC_INT)
+        dot = always_redraw(
+            lambda: Dot(
+                point=axes.c2p(
+                    x.get_value(), cross_sec_graph.underlying_function(x.get_value()), 0
+                ),
+                color=RED,
+            )
+        )
+        lines = always_redraw(
+            lambda: axes.get_lines_to_point(
+                axes.c2p(
+                    x.get_value(), cross_sec_graph.underlying_function(x.get_value()), 0
+                )
+            ),
+        )
+        r_line = always_redraw(
+            lambda: axes.get_horizontal_line(
+                axes.c2p(x.get_value(), 0, 0),
+                color=ORANGE,
+                stroke_width=10.0,
+                line_func=Line,
+            ),
+        )
+        r_tex = always_redraw(
+            lambda: MathTex("r", color=ORANGE).next_to(r_line, DOWN, buff=0.8)
+        )
+        r = always_redraw(
+            lambda: MathTex(f"r={round(x.get_value(), 4)}", color=ORANGE).to_edge(
+                UR, buff=2.0
+            )
+        )
+        z = always_redraw(
+            lambda: MathTex(
+                f"z={round(cross_sec_graph.underlying_function(x.get_value()), 4)}",
+                color=BLUE,
+            ).next_to(r, DOWN, buff=0.5)
+        )
+
+        self.play(DrawBorderThenFill(axes), run_time=2)
+        self.play(DrawBorderThenFill(axes_labels))
+        self.play(Create(cross_sec_graph), Write(func), run_time=2)
+        self.play(Create(points, lag_ratio=0), run_time=3)
+        self.wait()
+        self.play(Create(dot), Create(lines), Create(r_line), Create(r_tex))
+        self.play(Create(r), Create(z))
+        self.wait()
+        self.play(x.animate.set_value(0), run_time=10)
