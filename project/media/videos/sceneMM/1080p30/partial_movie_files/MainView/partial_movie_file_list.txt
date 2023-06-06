@@ -1,0 +1,8 @@
+# This file is used internally by FFMPEG.
+file 'file:C:/Users/Chris/Documents/GitHub/calc-ab-final/project/media/videos/sceneMM/1080p30/partial_movie_files/MainView/371711840_630240490_327886869.mp4'
+file 'file:C:/Users/Chris/Documents/GitHub/calc-ab-final/project/media/videos/sceneMM/1080p30/partial_movie_files/MainView/2805686500_1413622352_778522020.mp4'
+file 'file:C:/Users/Chris/Documents/GitHub/calc-ab-final/project/media/videos/sceneMM/1080p30/partial_movie_files/MainView/3199606263_1120562062_2453197651.mp4'
+file 'file:C:/Users/Chris/Documents/GitHub/calc-ab-final/project/media/videos/sceneMM/1080p30/partial_movie_files/MainView/4021461180_1804042621_1487232367.mp4'
+file 'file:C:/Users/Chris/Documents/GitHub/calc-ab-final/project/media/videos/sceneMM/1080p30/partial_movie_files/MainView/129081857_3241341261_1401278617.mp4'
+file 'file:C:/Users/Chris/Documents/GitHub/calc-ab-final/project/media/videos/sceneMM/1080p30/partial_movie_files/MainView/1176852974_4097184393_3513103142.mp4'
+file 'file:C:/Users/Chris/Documents/GitHub/calc-ab-final/project/media/videos/sceneMM/1080p30/partial_movie_files/MainView/1996222864_329969645_3233118546.mp4'

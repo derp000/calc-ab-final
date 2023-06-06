@@ -145,7 +145,7 @@ class MainView(ThreeDScene):
         self.play(Write(sqr_sec, lag_ratio=0.0), run_time=2.0)
         self.wait(20.0)
 
-        self.next_section("Cross Section Visualization", skip_animations=True)
+        self.next_section("Cross Section Visualization", skip_animations=False)
 
         """
             If we were able to get the relationship between z and the area of each square cross section, 
@@ -162,7 +162,7 @@ class MainView(ThreeDScene):
         self.wait(2.5)
 
         # ~~~~ RENDER AS ONE SECTION AND SPLICE AT EACH MULTILINE COMMENT ~~~~~
-        self.next_section("XY", skip_animations=False)
+        self.next_section("XY", skip_animations=True)
 
         """
             Well, how can we do that? Let's first look at each square cross section from the top down,
@@ -282,7 +282,7 @@ class MainView(ThreeDScene):
 
         """
             If we go back into 3D, we can see all these components in play. Notice that as the value of
-            z increases, r decreases and thus area decreases as well, which our new equation now models.
+            z increases, r and area decreases and thus area decreases as well, which our new equation now models.
             Now that we finally have our equation relating z to cross section area, we can now integrate it.
             {go to AreaGraph}
         """
@@ -439,16 +439,21 @@ class SideView(Scene):
         """
             Here we're just going to redraw the graph real quick.
             
+            {go to slides after show intercepts}
             We didn't mention how the function was defined at first, but it is z = -1.465x^2 + 1.02.
             And in the YZ plane, it is z = -1.465y^2 + 1.02. We found this by finding the length of the
             tent, which was 1.18 m. This was the hypotenuse of a 45-45-90 triangle. We decided to make the
             corners of the tent's square base (or the legs of the triangle) our XY axes as shown in 3D before, 
             so that meant that the intercepts were all at plus or minus 1.18/sqrt(2).
 
+            {back to video}
             Based on these intercepts, our equations could be found by doing
             f(x) = a * (x + 1.18/sqrt(2)) * (x - 1.18/sqrt(2)) and substituting the y-intercept (0, 1.02 m),
             which is the height. The a value of -1.465 is then substituted back into this equation. Upon rearranging,
             you get -1.465x^2 + 1.02. 
+
+            Since the graph of f(x) and f(y) are basically the same and z = f(x) = f(y),
+            we'll only look at f(x).
         """
 
         self.play(DrawBorderThenFill(axes), run_time=2)
@@ -456,11 +461,6 @@ class SideView(Scene):
         self.play(Create(cross_sec_graph), Write(func), run_time=2)
         self.play(Create(points, lag_ratio=0), run_time=3)
         self.wait(2.5)
-
-        """
-            Since the graph of f(x) and f(y) are basically the same and z = f(x) = f(y),
-            we'll only look at f(x).
-        """
 
         self.wait()
         self.play(Create(dot), Create(lines), Create(r_line), Create(r_tex))
