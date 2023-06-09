@@ -3,4 +3,4 @@
 ## Dependencies
 
 - `ffmpeg`
-- a `TeX` distro
+- any `TeX` distribution
